@@ -19,4 +19,11 @@ public class UserDaoTest {
         assertEquals(1, user.getId());
         assertEquals(true, success);
     }
+
+    @Test
+    public void deleteById() {
+        UserDao userDao = new UserDao();
+        boolean success = userDao.deleteById(1);
+        assertEquals(true, success);
+    }
 }
