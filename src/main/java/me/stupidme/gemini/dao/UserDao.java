@@ -31,10 +31,13 @@ public class UserDao {
             statement.setString(3, user.getEmail());
             statement.setString(4, user.getPassword());
             statement.setTimestamp(5, user.getCreatedAt());
+            statement.executeUpdate();
             ResultSet set = statement.getGeneratedKeys();
-            user.setId(set.getLong(1));
-            user.setCreatedAt(set.getTimestamp(2));
-            return true;
+            if (set.next()) {
+                user.setId(set.getLong(1));
+                user.setCreatedAt(set.getTimestamp(2));
+                return true;
+            }
         } catch (SQLException e) {
             e.printStackTrace();
         }
