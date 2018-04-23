@@ -17,7 +17,6 @@ public class UserDao {
     private static final String SQL_DELETE_ARTICLES_BY_USER_ID = "DELETE FROM articles WHERE user_id=?";
     private static final String SQL_DELETE_COMMENTS_BY_USER_ID = "DELETE FROM comments WHERE user_id=?";
     private static final String SQL_DELETE_SESSIONS_BY_USER_ID = "DELETE FROM sessions WHERE user_id=?";
-    private static final String SQL_DELETE_USER_BY_UUID = "DELETE FROM users WHERE uuid=?";
 
     private static final String SQL_QUERY_USER_ID_BY_EMAIL = "SELECT id FROM users WHERE email=?";
     private static final String SQL_QUERY_USER_ID_BY_UUID = "SELECT id FROM users WHERE uuid=?";
@@ -34,21 +33,33 @@ public class UserDao {
                 long time = calendar.getTimeInMillis();
                 user.setCreatedAt(new Timestamp(time));
             }
+            connection.setAutoCommit(false);
             PreparedStatement statement = connection.prepareStatement(SQL_INSERT_USER, Statement.RETURN_GENERATED_KEYS);
             statement.setString(1, createUuid(user));
             statement.setString(2, user.getUserName());
             statement.setString(3, user.getEmail());
             statement.setString(4, user.getPassword());
             statement.setTimestamp(5, user.getCreatedAt());
-            statement.executeUpdate();
+            int effected = statement.executeUpdate();
+            if (effected <= 0) {
+                connection.commit();
+                return false;
+            }
             ResultSet set = statement.getGeneratedKeys();
             if (set.next()) {
                 user.setId(set.getLong(1));
                 user.setCreatedAt(set.getTimestamp(2));
+                connection.commit();
                 return true;
             }
+            connection.commit();
         } catch (SQLException e) {
             e.printStackTrace();
+            try {
+                connection.rollback();
+            } catch (SQLException e1) {
+                e1.printStackTrace();
+            }
         }
         return false;
     }
